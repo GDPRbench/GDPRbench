@@ -29,9 +29,11 @@ workload=com.yahoo.ycsb.workloads.GDPRWorkload
 readallfields=true
 writeallfields=true
 dataintegrity=true
+readLog=true
+verifyttl=true
 
 readproportion=0.0
-readmetaproportion=0.46
+readmetaproportion=0.5
 updateproportion=0
 updatemetaproportion=0
 deleteproportion=0
@@ -39,6 +41,7 @@ deletemetaproportion=0
 scanproportion=0
 insertproportion=0
 insertorder=ordered
+logproportion=0.5
 
 requestdistribution=zipfian
 
