@@ -8,7 +8,7 @@ We implement GDPRbench by adapting and extending YCSB. This [figure](images/gdpr
 
 ## Benchmarking
 
-To get started with GDPRbench, download or clone this repository. It consists of a minimal version of YCSB together with all the functionalities of GDPRbench. Please note that you will need Maven 3 to build and use the benchmark. 
+To get started with GDPRbench, download or clone this repository. It consists of a fully functional version of YCSB together with all the functionalities of GDPRbench. Please note that you will need [Maven 3](https://maven.apache.org/) to build and use the benchmark.
 
 ```bash
 git clone https://github.com/GDPRbench/GDPRbench.git
@@ -19,4 +19,6 @@ configure workloads/gdpr_{controller|customer|processor|regulator}
 ./bin/ycsb load redis -s -P workloads/gdpr_controller
 ./bin/ycsb run redis -s -P workloads/gdpr_controller
 ```
-Finally, compute **T-Compliance** by running all four GDPRbench workloads, and adding up the time taken by each of them.
+
+Interested in exploring the research behind this project? Check out our [website](https://gdprbench.org/).
+
