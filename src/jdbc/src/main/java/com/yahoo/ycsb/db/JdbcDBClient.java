@@ -358,7 +358,28 @@ public class JdbcDBClient extends DB {
 
   @Override
   public Status readLog(String table, int logcount){
-    return Status.OK;
+    String s = null;
+    try {
+      Process p = null;
+      p = Runtime.getRuntime().exec("tail -n 1000 /home/audit_logs/audit_dump.xm");
+      BufferedReader stdInput = new BufferedReader(new
+           InputStreamReader(p.getInputStream()));
+      BufferedReader stdError = new BufferedReader(new
+           InputStreamReader(p.getErrorStream()));
+      // read the output from the command
+      while ((s = stdInput.readLine()) != null) {
+        System.out.println(s);
+      }
+      // read any errors from the attempted command
+      while ((s = stdError.readLine()) != null) {
+        System.out.println(s);
+      }
+      return Status.OK;
+    } catch (IOException e) {
+      System.out.println("exception happened - here's what I know: ");
+      e.printStackTrace();
+      return Status.ERROR;
+    }
   }
 
   @Override
