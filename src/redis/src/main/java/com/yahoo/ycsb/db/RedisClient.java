@@ -277,10 +277,11 @@ public class RedisClient extends DB {
 
     ((BasicCommands)jedis).bgrewriteaof();
     
-    String s = null;
+    String s = null, query;
     try {
       // using the Runtime exec method:
-      Process p = Runtime.getRuntime().exec("tail -n 1000 /home/cc/gdpr-redis.aof");
+      query = "tail -n " + logcount + " /home/cc/gdpr-redis.aof";
+      Process p = Runtime.getRuntime().exec(query);
           
       BufferedReader stdInput = new BufferedReader(new 
            InputStreamReader(p.getInputStream()));

@@ -358,10 +358,12 @@ public class JdbcDBClient extends DB {
 
   @Override
   public Status readLog(String table, int logcount){
-    String s = null;
     try {
+      String s = null
+      String query = null;
       Process p = null;
-      p = Runtime.getRuntime().exec("tail -n 1000 /home/audit_logs/audit_dump.xm");
+      query = "tail -n " + logcount + " /home/audit_logs/audit_dump.xm";
+      Process p = Runtime.getRuntime().exec(query);
       BufferedReader stdInput = new BufferedReader(new
            InputStreamReader(p.getInputStream()));
       BufferedReader stdError = new BufferedReader(new
