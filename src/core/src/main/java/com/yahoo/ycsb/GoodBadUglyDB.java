@@ -164,19 +164,19 @@ public class GoodBadUglyDB extends DB {
     return Status.OK;
   }
 
-  public Status readMeta(String table, String cond, String ketmatch,
+  public Status readMeta(String table, int fieldnum, String cond, String ketmatch,
                          Vector<HashMap<String, ByteIterator>> result) {
     delay();
     return Status.OK;
   }
 
-  public Status updateMeta(String table, String cond, String keymatch,
+  public Status updateMeta(String table, int fieldnum, String cond, String keymatch,
                            String fieldkey, String fieldvalue) {
     delay();
     return Status.OK;
   }
 
-  public Status deleteMeta(String table, String cond, String keymatch) {
+  public Status deleteMeta(String table, int fieldnum, String cond, String keymatch) {
     delay();
     return Status.OK;
   }

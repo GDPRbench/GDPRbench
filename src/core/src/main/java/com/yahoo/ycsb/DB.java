@@ -88,7 +88,7 @@ public abstract class DB {
    */
   public abstract Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result);
   public abstract Status readLog(String table, int logCount);
-  public abstract Status readMeta(String table, String cond, String keymatch, 
+  public abstract Status readMeta(String table, int fieldnum, String cond, String keymatch, 
                                   Vector<HashMap<String, ByteIterator>> result);
 
   /**
@@ -115,7 +115,7 @@ public abstract class DB {
    * @return The result of the operation.
    */
   public abstract Status update(String table, String key, Map<String, ByteIterator> values);
-  public abstract Status updateMeta(String table, String cond, String keymatch, 
+  public abstract Status updateMeta(String table, int fieldnum, String cond, String keymatch, 
                                     String fieldkey, String fieldvalue);
 
   /**
@@ -138,7 +138,7 @@ public abstract class DB {
    * @return The result of the operation.
    */
   public abstract Status delete(String table, String key);
-  public abstract Status deleteMeta(String table, String cond, String keymatch);
+  public abstract Status deleteMeta(String table, int fieldnum, String cond, String keymatch);
 
   public abstract Status verifyTTL(String table, long recordcount);
 }

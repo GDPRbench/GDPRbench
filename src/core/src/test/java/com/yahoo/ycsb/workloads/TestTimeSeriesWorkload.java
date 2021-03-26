@@ -561,19 +561,19 @@ public class TestTimeSeriesWorkload {
     }
    
     @Override
-    public Status readMeta(String table, String cond, String startkey, 
+    public Status readMeta(String table, int fieldnum, String cond, String startkey, 
                            Vector<HashMap<String, ByteIterator>> result) {
       return Status.OK;
     }
 
     @Override
-    public Status updateMeta(String table, String cond, String startkey,
+    public Status updateMeta(String table, int fieldnum, String cond, String startkey,
                              String fieldkey, String fieldvalue) {
       return Status.OK;
     }
 
     @Override
-    public Status deleteMeta(String table, String cond, String startkey) {
+    public Status deleteMeta(String table, int fieldnum, String cond, String startkey) {
       return Status.OK;
     }  
 

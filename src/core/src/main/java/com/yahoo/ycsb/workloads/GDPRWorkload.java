@@ -39,9 +39,11 @@ import java.util.*;
  * <LI><b>writeallfields</b>: should updates and read/modify/writes update all fields (true) or just
  * one (false) (default: false)
  * <LI><b>readproportion</b>: what proportion of operations should be reads (default: 0.95)
- * <LI><b>readmetaproportion</b>: what proportion of operations should be reads (default: 0.05)
+ * <LI><b>readmetapurposeproportion</b>: what proportion of operations should be reads (default: 0.05)
+ * <LI><b>readmetauserproportion</b>: what proportion of operations should be reads (default: 0.05)
  * <LI><b>updateproportion</b>: what proportion of operations should be updates (default: 0.05)
- * <LI><b>updatemetaproportion</b>: what proportion of operations should be updates (default: 0.01)
+ * <LI><b>updatemetapurposeproportion</b>: what proportion of operations should be updates (default: 0.01)
+ * <LI><b>updatemetauserproportion</b>: what proportion of operations should be updates (default: 0.01)
  * <LI><b>insertproportion</b>: what proportion of operations should be inserts (default: 0)
  * <LI><b>scanproportion</b>: what proportion of operations should be scans (default: 0)
  * <LI><b>readmodifywriteproportion</b>: what proportion of operations should be read a record,
@@ -183,6 +185,38 @@ public class GDPRWorkload extends Workload {
 
   protected boolean checkcompliance;
   
+  public static final String PURPOSE_COUNT_PROPERTY = "purcount";
+
+  public static final String PURPOSE_COUNT_PROPERTY_DEFAULT = "100";
+
+  public static final String USER_COUNT_PROPERTY = "usrcount";
+
+  public static final String USER_COUNT_PROPERTY_DEFAULT = "10000";
+
+  public static final String OBJECTIVE_COUNT_PROPERTY = "objcount";
+
+  public static final String OBJECTIVE_COUNT_PROPERTY_DEFAULT = "100";
+
+  public static final String DECISION_COUNT_PROPERTY = "deccount";
+
+  public static final String DECISION_COUNT_PROPERTY_DEFAULT = "2";
+
+  public static final String ACL_COUNT_PROPERTY = "aclcount";
+
+  public static final String ACL_COUNT_PROPERTY_DEFAULT = "10";
+
+  public static final String SHARED_COUNT_PROPERTY = "shrcount";
+
+  public static final String SHARED_COUNT_PROPERTY_DEFAULT = "10";
+
+  public static final String SOURCE_COUNT_PROPERTY = "srccount";
+
+  public static final String SOURCE_COUNT_PROPERTY_DEFAULT = "10";
+
+  public static final String CATEGORY_COUNT_PROPERTY = "catcount";
+
+  public static final String CATEGORY_COUNT_PROPERTY_DEFAULT = "10";
+
   /**
    * The name of the property for deciding whether to check all returned
    * data against the formation template to ensure data integrity.
@@ -213,12 +247,22 @@ public class GDPRWorkload extends Workload {
   /**
    * The name of the property for the proportion of transactions that are reads.
    */
-  public static final String READMETA_PROPORTION_PROPERTY = "readmetaproportion";
+  public static final String READMETA_PURPOSE_PROPORTION_PROPERTY = "readmetapurposeproportion";
 
   /**
    * The default proportion of transactions that are reads.
    */
-  public static final String READMETA_PROPORTION_PROPERTY_DEFAULT = "0.0";
+  public static final String READMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+
+  /**
+   * The name of the property for the proportion of transactions that are reads.
+   */
+  public static final String READMETA_USER_PROPORTION_PROPERTY = "readmetauserproportion";
+
+  /**
+   * The default proportion of transactions that are reads.
+   */
+  public static final String READMETA_USER_PROPORTION_PROPERTY_DEFAULT = "0.0";
 
   /**
    * The name of the property for the proportion of transactions that are updates.
@@ -233,12 +277,22 @@ public class GDPRWorkload extends Workload {
   /**
    * The name of the property for the proportion of transactions that are updates.
    */
-  public static final String UPDATEMETA_PROPORTION_PROPERTY = "updatemetaproportion";
+  public static final String UPDATEMETA_PURPOSE_PROPORTION_PROPERTY = "updatemetapurposeproportion";
 
   /**
    * The default proportion of transactions that are updates.
    */
-  public static final String UPDATEMETA_PROPORTION_PROPERTY_DEFAULT = "0.001";
+  public static final String UPDATEMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+
+  /**
+   * The name of the property for the proportion of transactions that are updates.
+   */
+  public static final String UPDATEMETA_USER_PROPORTION_PROPERTY = "updatemetauserproportion";
+
+  /**
+   * The default proportion of transactions that are updates.
+   */
+  public static final String UPDATEMETA_USER_PROPORTION_PROPERTY_DEFAULT = "0.0";
 
   /**
    * The name of the property for the proportion of transactions that are inserts.
@@ -283,12 +337,22 @@ public class GDPRWorkload extends Workload {
   /**
    * The name of the property for the proportion of transactions that are deletes.
    */
-  public static final String DELETEMETA_PROPORTION_PROPERTY = "deletemetaproportion";
+  public static final String DELETEMETA_PURPOSE_PROPORTION_PROPERTY = "deletemetapurposeproportion";
 
   /**
    * The default proportion of transactions that are deletes.
    */
-  public static final String DELETEMETA_PROPORTION_PROPERTY_DEFAULT = "0.0";
+  public static final String DELETEMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+
+  /**
+   * The name of the property for the proportion of transactions that are deletes.
+   */
+  public static final String DELETEMETA_USER_PROPORTION_PROPERTY = "deletemetauserproportion";
+
+  /**
+   * The default proportion of transactions that are deletes.
+   */
+  public static final String DELETEMETA_USER_PROPORTION_PROPERTY_DEFAULT = "0.0";
 
   /**
    * The name of the property for the the distribution of requests across the keyspace. Options are
@@ -454,7 +518,7 @@ public class GDPRWorkload extends Workload {
     fieldcount =
         Long.parseLong(p.getProperty(FIELD_COUNT_PROPERTY, FIELD_COUNT_PROPERTY_DEFAULT));
     final String fieldnameprefix = p.getProperty(FIELD_NAME_PREFIX, FIELD_NAME_PREFIX_DEFAULT);
-    populateValues();
+    populateValues(p);
     fieldlengthgenerator = GDPRWorkload.getFieldLengthGenerator(p);
 
     recordcount =
@@ -580,7 +644,7 @@ public class GDPRWorkload extends Workload {
     }
     String value = Long.toString(keynum);
     int fill = zeropadding - value.length();
-    String prekey = "user";
+    String prekey = "key";
     for (int i = 0; i < fill; i++) {
       prekey += '0';
     }
@@ -591,50 +655,105 @@ public class GDPRWorkload extends Workload {
 /**
    * Fill values for all fields.
    */
-  private void populateValues() {
+  private void populateValues(final Properties p) {
     fieldnames = new ArrayList<>();
     fieldvalues = new ArrayList[10];
+    int x = 0;
     for (int i = 0; i < fieldcount; i++) {
       //fieldnames.add(fieldnameprefix + i);
       switch(i) { 
       case 0: fieldnames.add("PUR"); 
-              fieldvalues[i]=new ArrayList<String>(
-                Arrays.asList("ads", "2fa", "msg", "backup"));
-              break;
+        int purlength =
+            Integer.parseInt(p.getProperty(PURPOSE_COUNT_PROPERTY, PURPOSE_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (purlength <= 0) {
+          purlength = Integer.parseInt(PURPOSE_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < purlength; x++) {
+          fieldvalues[i].add("purpose" + Integer.toString(x));
+        }
+        break;
       case 1: fieldnames.add("TTL");
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("30", "10000", "12000", "14000", "16000", "18000", "20000", "22000", "24000", "1000000"));
-              break;
+        fieldvalues[i]=new ArrayList<>(
+        Arrays.asList("30", "10000", "12000", "14000", "16000", "18000", "20000", "22000", "24000", "1000000"));
+        break;
       case 2: fieldnames.add("USR"); 
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("albert", "brandon", "carol", "dilbert", "edith", "frank", "godel", "hans", "india", 
-                "jack", "kamala", "london", "mary", "nancy", "othello", "paris", "quintin", "rhodes", "sam", 
-                "tintin", "underwood", "victor", "wang", "xin", "yang", "zhou"));
-              break;
+        int usrlength =
+            Integer.parseInt(p.getProperty(USER_COUNT_PROPERTY, USER_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (usrlength <= 0) {
+          usrlength = Integer.parseInt(USER_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < usrlength; x++) {
+          fieldvalues[i].add("user" + Integer.toString(x));
+        }
+        break;
       case 3: fieldnames.add("OBJ"); 
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("religion", "sports", "yoga", "drugs", "alcohol", "dairy"));
-              break;
+        int objlength =
+            Integer.parseInt(p.getProperty(OBJECTIVE_COUNT_PROPERTY, OBJECTIVE_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (objlength <= 0) {
+          objlength = Integer.parseInt(OBJECTIVE_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < objlength; x++) {
+          fieldvalues[i].add("obj" + Integer.toString(x));
+        }
+        break;
       case 4: fieldnames.add("DEC");
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("allow", "disallow", "inform"));
-              break;
+        int declength =
+            Integer.parseInt(p.getProperty(DECISION_COUNT_PROPERTY, DECISION_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (declength <= 0) {
+          declength = Integer.parseInt(DECISION_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < declength; x++) {
+          fieldvalues[i].add("dec" + Integer.toString(x));
+        }
+        break;
       case 5: fieldnames.add("ACL"); 
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("ads", "billing", "infra", "emergency", "sales", "marketing", "backup", "social"));
-              break;
+        int acllength =
+            Integer.parseInt(p.getProperty(ACL_COUNT_PROPERTY, ACL_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (acllength <= 0) {
+          acllength = Integer.parseInt(ACL_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < acllength; x++) {
+          fieldvalues[i].add("acl" + Integer.toString(x));
+        }
+        break;
       case 6: fieldnames.add("SHR");
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("NULL", "facebook", "twitter", "linkedin", "reddit", "instagram", "whatsapp"));
-              break;
+        int shrlength =
+            Integer.parseInt(p.getProperty(SHARED_COUNT_PROPERTY, SHARED_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (shrlength <= 0) {
+          shrlength = Integer.parseInt(SHARED_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < shrlength; x++) {
+          fieldvalues[i].add("shr" + Integer.toString(x));
+        }
+        break;
       case 7: fieldnames.add("SRC");
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("direct", "facebook", "google", "twitter", "unknown"));
-              break;
+        int srclength =
+            Integer.parseInt(p.getProperty(SOURCE_COUNT_PROPERTY, SOURCE_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (srclength <= 0) {
+          srclength = Integer.parseInt(SOURCE_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < srclength; x++) {
+          fieldvalues[i].add("src" + Integer.toString(x));
+        }
+        break;
       case 8: fieldnames.add("CAT");
-              fieldvalues[i]=new ArrayList<>(
-                Arrays.asList("contact", "ssn", "medical", "finance", "work", "shopping", "internet", "social"));
-              break;
+        int catlength =
+            Integer.parseInt(p.getProperty(CATEGORY_COUNT_PROPERTY, CATEGORY_COUNT_PROPERTY_DEFAULT));
+        fieldvalues[i] = new ArrayList<String>();
+        if (catlength <= 0) {
+          catlength = Integer.parseInt(CATEGORY_COUNT_PROPERTY_DEFAULT);
+        }
+        for (x = 0; x < catlength; x++) {
+          fieldvalues[i].add("cat" + Integer.toString(x));
+        }
+        break;
       default: fieldnames.add("Data");
               fieldvalues[i]=new ArrayList<>();
               fieldvalues[i].add("val10");
@@ -689,15 +808,17 @@ public class GDPRWorkload extends Workload {
   private String buildDeterministicValue(long keynum, int fieldnum, String fieldkey) {
     int size = fieldlengthgenerator.nextValue().intValue();
     StringBuilder sb = new StringBuilder(size);
-    sb.append(fieldkey);
-    sb.append('=');
-    sb.append(fieldvalues[fieldnum].get((int)keynum%fieldvalues[fieldnum].size()));
-    while (sb.length() < size) {
-      sb.append('+');
-      //sb.append(sb.toString().hashCode());
+    //sb.append(fieldkey);
+    //sb.append('=');
+    if (fieldnum == 9) { //field10 is data; rest are metadata
+      while (sb.length() < size) {
+        sb.append(String.valueOf(keynum));
+        sb.append(sb.toString().hashCode());
+      }
+      sb.setLength(size);
+    } else {
+      sb.append(fieldvalues[fieldnum].get((int)keynum%fieldvalues[fieldnum].size()));
     }
-    sb.setLength(size);
-
     return sb.toString();
   }
 
@@ -774,14 +895,20 @@ public class GDPRWorkload extends Workload {
     }
 
     switch (operation) {
-    case "READMETA":
-      doTransactionReadMeta(db);
+    case "READMETAPURPOSE":
+      doTransactionReadMeta(db, 0);
+      break;
+    case "READMETAUSER":
+      doTransactionReadMeta(db, 2);
       break;
     case "READ":
       doTransactionRead(db);
       break;
-    case "UPDATEMETA":
-      doTransactionUpdateMeta(db);
+    case "UPDATEMETAPURPOSE":
+      doTransactionUpdateMeta(db, 0);
+      break;
+    case "UPDATEMETAUSER":
+      doTransactionUpdateMeta(db, 2);
       break;
     case "UPDATE":
       doTransactionUpdate(db);
@@ -792,8 +919,11 @@ public class GDPRWorkload extends Workload {
     case "SCAN":
       doTransactionScan(db);
       break;
-    case "DELETEMETA":
-      doTransactionDeleteMeta(db);
+    case "DELETEMETAPURPOSE":
+      doTransactionDeleteMeta(db, 0);
+      break;
+    case "DELETEMETAUSER":
+      doTransactionDeleteMeta(db, 2);
       break;
     case "DELETE":
       doTransactionDelete(db);
@@ -877,16 +1007,16 @@ public class GDPRWorkload extends Workload {
     }*/
   }
 
-  public void doTransactionReadMeta(DB db) {
+  public void doTransactionReadMeta(DB db, int metadatanum) {
 
     long keynum = nextKeynum();
 
-    // match on purpose meta data field
-    String metadatacond = buildDeterministicValue(keynum, 0, fieldnames.get(0));
+    // match on meta data field passed
+    String metadatacond = buildDeterministicValue(keynum, metadatanum, fieldnames.get(metadatanum));
 
-    //System.err.println("Read metadata called with cond: "+ metadatacond);
+    //System.err.println("Read metadata called with cond: "+ metadatacond + " Field num: " + metadatanum);
 
-    db.readMeta(table, metadatacond, "user*", new Vector<HashMap<String, ByteIterator>>());
+    db.readMeta(table, metadatanum, metadatacond, "key*", new Vector<HashMap<String, ByteIterator>>());
   }
 
   public void doTransactionReadLog(DB db) {
@@ -976,14 +1106,14 @@ public class GDPRWorkload extends Workload {
     db.scan(table, startkeyname, len, fields, new Vector<HashMap<String, ByteIterator>>());
   }
 
-  public void doTransactionUpdateMeta(DB db) {
+  public void doTransactionUpdateMeta(DB db, int metadatanum) {
 
     //String startkeyname = buildKeyName(0);
 
     long keynum = nextKeynum();
 
-    // match on purpose field
-    String metadatacond = buildDeterministicValue(keynum, 0, fieldnames.get(0));
+    // match on metadata field
+    String metadatacond = buildDeterministicValue(keynum, metadatanum, fieldnames.get(metadatanum));
 
     // pick another field to be updated
     int fieldnum = metadatachooser.nextValue().intValue();
@@ -992,9 +1122,10 @@ public class GDPRWorkload extends Workload {
     // new value for another meta data field
     String metadatavalue = buildDeterministicValue(keynum, fieldnum, fieldkey);
 
-    //System.err.println("Update metadata called with cond: "+ metadatacond + " value: " + metadatavalue);
+    //System.err.println("Update metadata called with cond: "+ metadatacond +
+    //                   " value: " + metadatavalue + " metadatanum " + metadatanum);
     
-    db.updateMeta(table, metadatacond, "user*", fieldkey, metadatavalue);
+    db.updateMeta(table, metadatanum, metadatacond, "key*", fieldkey, metadatavalue);
   }
 
   public void doTransactionUpdate(DB db) {
@@ -1027,16 +1158,16 @@ public class GDPRWorkload extends Workload {
     db.delete(table, keyname);
   }
 
-  public void doTransactionDeleteMeta(DB db) {
+  public void doTransactionDeleteMeta(DB db, int metadatanum) {
     // choose a random key
     long keynum = nextKeynum();
 
-    // match on purpose field
-    String metadatacond = buildDeterministicValue(keynum, 0, fieldnames.get(0));
+    // match on metadata field
+    String metadatacond = buildDeterministicValue(keynum, metadatanum, fieldnames.get(metadatanum));
     
-    //System.err.println("Transaction delete meta called for: "+ metadatacond);
+    //System.err.println("Transaction delete meta called for: "+ metadatacond + " metadatanum: " + metadatanum);
     
-    db.deleteMeta(table, metadatacond, "user*");
+    db.deleteMeta(table, metadatanum, metadatacond, "key*");
   }
 
   public void doTransactionInsert(DB db) {
@@ -1071,18 +1202,24 @@ public class GDPRWorkload extends Workload {
     }
     final double readproportion = Double.parseDouble(
         p.getProperty(READ_PROPORTION_PROPERTY, READ_PROPORTION_PROPERTY_DEFAULT));
-    final double readmetaproportion = Double.parseDouble(
-        p.getProperty(READMETA_PROPORTION_PROPERTY, READMETA_PROPORTION_PROPERTY_DEFAULT));
+    final double readmetapurproportion = Double.parseDouble(
+        p.getProperty(READMETA_PURPOSE_PROPORTION_PROPERTY, READMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT));
+    final double readmetauserproportion = Double.parseDouble(
+        p.getProperty(READMETA_USER_PROPORTION_PROPERTY, READMETA_USER_PROPORTION_PROPERTY_DEFAULT));
     final double updateproportion = Double.parseDouble(
         p.getProperty(UPDATE_PROPORTION_PROPERTY, UPDATE_PROPORTION_PROPERTY_DEFAULT));
-    final double updatemetaproportion = Double.parseDouble(
-        p.getProperty(UPDATEMETA_PROPORTION_PROPERTY, UPDATEMETA_PROPORTION_PROPERTY_DEFAULT));
+    final double updatemetapurproportion = Double.parseDouble(
+        p.getProperty(UPDATEMETA_PURPOSE_PROPORTION_PROPERTY, UPDATEMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT));
+    final double updatemetauserproportion = Double.parseDouble(
+        p.getProperty(UPDATEMETA_USER_PROPORTION_PROPERTY, UPDATEMETA_USER_PROPORTION_PROPERTY_DEFAULT));
     final double insertproportion = Double.parseDouble(
         p.getProperty(INSERT_PROPORTION_PROPERTY, INSERT_PROPORTION_PROPERTY_DEFAULT));
     final double deleteproportion = Double.parseDouble(
         p.getProperty(DELETE_PROPORTION_PROPERTY, DELETE_PROPORTION_PROPERTY_DEFAULT));
-    final double deletemetaproportion = Double.parseDouble(
-        p.getProperty(DELETEMETA_PROPORTION_PROPERTY, DELETEMETA_PROPORTION_PROPERTY_DEFAULT));
+    final double deletemetapurproportion = Double.parseDouble(
+        p.getProperty(DELETEMETA_PURPOSE_PROPORTION_PROPERTY, DELETEMETA_PURPOSE_PROPORTION_PROPERTY_DEFAULT));
+    final double deletemetauserproportion = Double.parseDouble(
+        p.getProperty(DELETEMETA_USER_PROPORTION_PROPERTY, DELETEMETA_USER_PROPORTION_PROPERTY_DEFAULT));
     final double scanproportion = Double.parseDouble(
         p.getProperty(SCAN_PROPORTION_PROPERTY, SCAN_PROPORTION_PROPERTY_DEFAULT));
     final double readmodifywriteproportion = Double.parseDouble(p.getProperty(
@@ -1093,16 +1230,24 @@ public class GDPRWorkload extends Workload {
       operationchooser.addValue(readproportion, "READ");
     }
 
-    if (readmetaproportion > 0) {
-      operationchooser.addValue(readmetaproportion, "READMETA");
+    if (readmetapurproportion > 0) {
+      operationchooser.addValue(readmetapurproportion, "READMETAPURPOSE");
+    }
+
+    if (readmetauserproportion > 0) {
+      operationchooser.addValue(readmetauserproportion, "READMETAUSER");
     }
 
     if (updateproportion > 0) {
       operationchooser.addValue(updateproportion, "UPDATE");
     }
 
-    if (updatemetaproportion > 0) {
-      operationchooser.addValue(updatemetaproportion, "UPDATEMETA");
+    if (updatemetapurproportion > 0) {
+      operationchooser.addValue(updatemetapurproportion, "UPDATEMETAPURPOSE");
+    }
+
+    if (updatemetauserproportion > 0) {
+      operationchooser.addValue(updatemetauserproportion, "UPDATEMETAUSER");
     }
 
     if (insertproportion > 0) {
@@ -1113,8 +1258,12 @@ public class GDPRWorkload extends Workload {
       operationchooser.addValue(deleteproportion, "DELETE");
     }
 
-    if (deletemetaproportion > 0) {
-      operationchooser.addValue(deletemetaproportion, "DELETEMETA");
+    if (deletemetapurproportion > 0) {
+      operationchooser.addValue(deletemetapurproportion, "DELETEMETAPURPOSE");
+    }
+
+    if (deletemetauserproportion > 0) {
+      operationchooser.addValue(deletemetauserproportion, "DELETEMETAUSER");
     }
 
     if (scanproportion > 0) {

@@ -385,7 +385,8 @@ public class JdbcDBClient extends DB {
   }
 
   @Override
-  public Status readMeta(String tableName, String cond, String keymatch, Vector<HashMap<String, ByteIterator>> result) {
+  public Status readMeta(String tableName, int fieldnum, String cond, 
+      String keymatch, Vector<HashMap<String, ByteIterator>> result) {
     //TODO: No use for keyMatch whatsoever, so check if without queering for keys this will work.
     try {
       HashSet<String> fields = null;
@@ -480,7 +481,8 @@ public class JdbcDBClient extends DB {
   }
 
   @Override
-  public Status updateMeta(String table, String condition, String keymatch, String fieldname, String metadatavalue) {
+  public Status updateMeta(String table, int fieldnum, String condition, 
+      String keymatch, String fieldname, String metadatavalue) {
     try{
       StatementType type = new StatementType(StatementType.Type.UPDATE, table,
           1, "", getShardIndexByKey(keymatch));
@@ -588,7 +590,7 @@ public class JdbcDBClient extends DB {
   }
 
   @Override
-  public Status deleteMeta(String table, String condition, String keymatch) {
+  public Status deleteMeta(String table, int fieldnum, String condition, String keymatch) {
     try{
       StatementType type = new StatementType(StatementType.Type.DELETE, table, 1, "", getShardIndexByKey(keymatch));
       PreparedStatement deleteStatement = createAndCacheDeleteMetaStatement(type, keymatch);

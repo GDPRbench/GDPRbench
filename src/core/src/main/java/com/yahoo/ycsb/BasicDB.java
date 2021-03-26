@@ -367,17 +367,17 @@ public class BasicDB extends DB {
     return Status.OK;
   }
 
-  public Status readMeta(String table, String cond, String keymatch,
+  public Status readMeta(String table, int fieldnum, String cond, String keymatch,
                          Vector<HashMap<String, ByteIterator>> result) {
     return Status.OK;
   }
 
-  public Status updateMeta(String table, String cond, String keymatch,
+  public Status updateMeta(String table, int fieldnum, String cond, String keymatch,
                            String fieldkey, String fieldvalue) {
     return Status.OK;
   }
 
-  public Status deleteMeta(String table, String cond, String keymatch) {
+  public Status deleteMeta(String table, int fieldnum, String cond, String keymatch) {
     return Status.OK;
   }
 

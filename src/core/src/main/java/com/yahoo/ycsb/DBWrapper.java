@@ -268,12 +268,12 @@ public class DBWrapper extends DB {
     }
   }
 
-  public Status readMeta(String table, String cond, String keymatch,
+  public Status readMeta(String table, int fieldnum, String cond, String keymatch,
                          Vector<HashMap<String, ByteIterator>> result) {
     try (final TraceScope span = tracer.newScope(scopeStringReadMeta)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
-      Status res = db.readMeta(table, cond, keymatch, result);
+      Status res = db.readMeta(table, fieldnum, cond, keymatch, result);
       long en = System.nanoTime();
       measure("READMETA", res, ist, st, en);
       measurements.reportStatus("READMETA", res);
@@ -281,12 +281,12 @@ public class DBWrapper extends DB {
     }
   }
 
-  public Status updateMeta(String table, String cond, String keymatch,
+  public Status updateMeta(String table, int fieldnum, String cond, String keymatch,
                            String fieldkey, String fieldvalue) {
     try (final TraceScope span = tracer.newScope(scopeStringUpdateMeta)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
-      Status res = db.updateMeta(table, cond, keymatch, fieldkey, fieldvalue);
+      Status res = db.updateMeta(table, fieldnum, cond, keymatch, fieldkey, fieldvalue);
       long en = System.nanoTime();
       measure("UPDATEMETA", res, ist, st, en);
       measurements.reportStatus("UPDATEMETA", res);
@@ -294,11 +294,11 @@ public class DBWrapper extends DB {
     }
   }
 
-  public Status deleteMeta(String table, String cond, String keymatch) {
+  public Status deleteMeta(String table, int fieldnum, String cond, String keymatch) {
     try (final TraceScope span = tracer.newScope(scopeStringDeleteMeta)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
-      Status res = db.deleteMeta(table, cond, keymatch);
+      Status res = db.deleteMeta(table, fieldnum, cond, keymatch);
       long en = System.nanoTime();
       measure("DELETEMETA", res, ist, st, en);
       measurements.reportStatus("DELETEMETA", res);

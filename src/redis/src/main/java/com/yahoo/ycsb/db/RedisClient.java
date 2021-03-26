@@ -66,6 +66,10 @@ public class RedisClient extends DB {
 
   public static final String INDEX_KEY = "_indices";
 
+  private static String[] fieldnames = {
+      "PUR", "TTL", "USR", "OBJ", "DEC", "ACL", "SHR", "SRC", "CAT", "Data"
+  };
+
   public void init() throws DBException {
     Properties props = getProperties();
     int port;
@@ -137,20 +141,20 @@ public class RedisClient extends DB {
   }
 
   @Override
-  public Status readMeta(String table, String cond, String keymatch,
+  public Status readMeta(String table, int fieldnum, String cond, String keymatch,
       Vector<HashMap<String, ByteIterator>> result) {
     Set<String> keys = ((Jedis) jedis).keys(keymatch);
     HashSet<String> fields = null;
     HashMap<String, ByteIterator> values;
+    String fieldname = fieldnames[fieldnum];
+
     for (String key : keys) {
       values = new HashMap<String, ByteIterator>();
       read(table, key, fields, values);
-      for(Map.Entry<String, ByteIterator> entry : values.entrySet()) { // compare each field
-        if (entry.getValue().toString().equals(cond)) {
-          result.add(values);
-          break;
-        }
-      } 
+      if (!values.isEmpty() && values.get(fieldname).toString().equals(cond)) {
+        //System.out.println("Found key: "+ key + " matching cond " + cond + " fieldname: " + fieldname);
+        result.add(values);
+      }
     }
 
     return Status.OK;
@@ -188,22 +192,20 @@ public class RedisClient extends DB {
   }
 
   @Override
-  public Status deleteMeta(String table, String condition, String keymatch) {
+  public Status deleteMeta(String table, int fieldnum, String condition, String keymatch) {
     Set<String> keys = ((Jedis) jedis).keys(keymatch);
     //System.out.println("deleteMeta got called - returned "+ keys.size());
 
     HashSet<String> fields = null;
     HashMap<String, ByteIterator> values;
+    String fieldname = fieldnames[fieldnum];
+    
     for (String key : keys) {
       values = new HashMap<String, ByteIterator>();
       read(table, key, fields, values);
-      for(Map.Entry<String, ByteIterator> entry : values.entrySet()) { // compare each field
-        if (entry.getValue().toString().equals(condition)) {
-          //System.out.println("YESSS Found key: "+ key + " matching cond " + condition);
-          if (jedis.del(key) == 0 && jedis.zrem(INDEX_KEY, key) == 0) {
-            return Status.ERROR;
-          }
-          break;
+      if (!values.isEmpty() && values.get(fieldname).toString().equals(condition)) {
+        if (jedis.del(key) == 0 && jedis.zrem(INDEX_KEY, key) == 0) {
+          return Status.ERROR;
         }
       }
     }
@@ -219,21 +221,22 @@ public class RedisClient extends DB {
   }
 
   @Override
-  public Status updateMeta(String table, String condition, String keymatch, String fieldname, String metadatavalue) {
+  public Status updateMeta(String table, int fieldnum, String condition, 
+      String keymatch, String newfieldname, String newmetadatavalue) {
     //System.out.println("HELLO updateMeta got called with startkey "+ startkey);
     Set<String> keys = ((Jedis) jedis).keys(keymatch);
     HashSet<String> fields = null;
     HashMap<String, ByteIterator> values;
+    String fieldname = fieldnames[fieldnum];
+    
     for (String key : keys) {
       values = new HashMap<String, ByteIterator>();
       read(table, key, fields, values);
-      for(Map.Entry<String, ByteIterator> entry : values.entrySet()) { // compare each field
-        if (entry.getValue().toString().equals(condition)) {
-          values.put(fieldname, new StringByteIterator(metadatavalue));
-          //System.err.println("Got key: " + key + " with matching cond: "+ condition + " value: " + metadatavalue);
-          jedis.hmset(key, StringByteIterator.getStringMap(values));
-          break;
-        }
+      if (!values.isEmpty() && values.get(fieldname).toString().equals(condition)) {
+        values.put(newfieldname, new StringByteIterator(newmetadatavalue));
+        jedis.hmset(key, StringByteIterator.getStringMap(values));
+        //System.err.println("Found key: " + key + " with matching cond: "+ condition +
+        //    "new field name: " + newfieldname + " new value: " + newmetadatavalue);
       }
     }
 
